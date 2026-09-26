@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>おかも</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="おかも">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#2E3F50">
+<link rel="apple-touch-icon" href="okm_app_icon_180.png">
+<link rel="icon" href="okm_app_icon_180.png">
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F7F9FB;color:#2E3F50;font-family:-apple-system,"Hiragino Sans",sans-serif;text-align:center}
+.box{padding:24px}
+img{width:96px;height:96px;border-radius:22px}
+h1{font-size:18px;font-weight:500;margin:16px 0 8px}
+p{font-size:14px;color:#5E7285;line-height:1.8;margin:0 0 20px}
+a{display:inline-block;background:#2E3F50;color:#fff;text-decoration:none;border-radius:12px;padding:12px 28px;font-weight:500}
+</style>
+</head>
+<body>
+<div class="box">
+  <img src="okm_app_icon_180.png" alt="">
+  <h1>おかも 添削</h1>
+  <p id="msg">共有ボタン →「ホーム画面に追加」で<br>アプリとして置けます</p>
+  <a id="go" href="#">開く</a>
+</div>
+<script>
+var APP = 'https://script.google.com/macros/s/AKfycbytadBya3DZszG6kxNwN8ieMYw9wof6VkVNUCZH6wGvophQV7JnE9oEU45mVlKOpIwz8A/exec';
+document.getElementById('go').href = APP;
+var standalone = window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+if (standalone) { document.getElementById('msg').textContent = 'ひらいています…'; location.replace(APP); }
+</script>
+</body>
+</html>
