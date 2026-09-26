@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>おかも</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -18,6 +18,8 @@ img{width:96px;height:96px;border-radius:22px}
 h1{font-size:18px;font-weight:500;margin:16px 0 8px}
 p{font-size:14px;color:#5E7285;line-height:1.8;margin:0 0 20px}
 a{display:inline-block;background:#2E3F50;color:#fff;text-decoration:none;border-radius:12px;padding:12px 28px;font-weight:500}
+#f{position:fixed;top:0;left:0;width:100vw;height:100vh;height:100dvh;border:0;background:#F6F5F3}
+#fb{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);font-size:12px;padding:8px 14px;border-radius:999px;background:rgba(46,63,80,.85)}
 </style>
 </head>
 <body>
@@ -31,7 +33,10 @@ a{display:inline-block;background:#2E3F50;color:#fff;text-decoration:none;border
 var APP = 'https://script.google.com/macros/s/AKfycbytadBya3DZszG6kxNwN8ieMYw9wof6VkVNUCZH6wGvophQV7JnE9oEU45mVlKOpIwz8A/exec';
 document.getElementById('go').href = APP;
 var standalone = window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-if (standalone) { document.getElementById('msg').textContent = 'ひらいています…'; location.replace(APP); }
+if (standalone) {
+  document.body.innerHTML = '<iframe id="f" src="' + APP + '" allow="clipboard-write"></iframe><a id="fb" href="' + APP + '">開かないときはこちら</a>';
+  setTimeout(function () { var fb = document.getElementById('fb'); if (fb) fb.style.display = 'none'; }, 8000);
+}
 </script>
 </body>
 </html>
