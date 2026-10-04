@@ -2,36 +2,69 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>おかも</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="おかも">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#2E3F50">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
 <link rel="apple-touch-icon" href="okm_app_icon_180.png">
 <link rel="icon" href="okm_app_icon_180.png">
 <style>
-body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F7F9FB;color:#2E3F50;font-family:-apple-system,"Hiragino Sans",sans-serif;text-align:center}
-.box{padding:24px}
-img{width:96px;height:96px;border-radius:22px}
-h1{font-size:18px;font-weight:500;margin:16px 0 8px}
-p{font-size:14px;color:#5E7285;line-height:1.8;margin:0 0 20px}
-a{display:inline-block;background:#2E3F50;color:#fff;text-decoration:none;border-radius:12px;padding:12px 28px;font-weight:500}
+:root{--bg:#F3F6F9;--surface:#FFFFFF;--ink:#2E3F50;--sub:#5E7285;--top:#2E3F50;--st:0px;--sb:env(safe-area-inset-bottom)}
+@media (prefers-color-scheme: dark){:root{--bg:#10161D;--surface:#18212B;--ink:#E6EDF3;--sub:#A3B4C4;--top:#10161D}}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans",sans-serif;overflow:hidden}
+/* 上：ステータスバーの下に敷く帯（時計の白文字が読めるよう濃い色）。下：ホームバーの分はタブバーと同じ色 */
+#top{position:fixed;left:0;right:0;top:0;height:var(--st);background:var(--top)}
+#bot{position:fixed;left:0;right:0;bottom:0;height:var(--sb);background:var(--surface)}
+#app{position:fixed;left:0;right:0;top:var(--st);bottom:var(--sb);width:100%;height:calc(100% - var(--st) - var(--sb));border:0;display:block;background:var(--bg)}
+.box{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.box img{width:96px;height:96px;border-radius:22px}
+.box h1{font-size:18px;font-weight:500;margin:16px 0 8px}
+.box p{font-size:14px;color:var(--sub);line-height:1.8;margin:0}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
-<div class="box">
+<div id="top"></div>
+<iframe id="app" hidden title="おかも 添削" allow="clipboard-write"></iframe>
+<div id="bot"></div>
+<div class="box" id="box">
   <img src="okm_app_icon_180.png" alt="">
   <h1>おかも 添削</h1>
-  <p id="msg">共有ボタン →「ホーム画面に追加」で<br>アプリとして置けます</p>
-  <a id="go" href="#">開く</a>
+  <p id="msg">ひらいています…</p>
 </div>
 <script>
 var APP = 'https://script.google.com/macros/s/AKfycbytadBya3DZszG6kxNwN8ieMYw9wof6VkVNUCZH6wGvophQV7JnE9oEU45mVlKOpIwz8A/exec';
-document.getElementById('go').href = APP;
 var standalone = window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-if (standalone) { document.getElementById('msg').textContent = 'ひらいています…'; location.replace(APP); }
+// 鍵はリンクの末尾（#k=…）にだけある。このページ自体には書かない
+var m = (location.hash + '&' + location.search).match(/[#?&]k=([0-9a-f]{32,128})/);
+var k = m ? m[1] : '';
+try { if (k) localStorage.setItem('okm_k', k); else k = localStorage.getItem('okm_k') || ''; } catch (e) {}
+// ステータスバーの高さ：ホーム画面アプリのときだけ上に帯を敷く（ノッチ無しの端末は 0 が返るので最低 20px）
+if (standalone) {
+  var probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top);width:1px;visibility:hidden';
+  document.body.appendChild(probe);
+  var st = Math.max(probe.offsetHeight, 20);
+  document.body.removeChild(probe);
+  document.documentElement.style.setProperty('--st', st + 'px');
+}
+if (!k) {
+  document.getElementById('msg').innerHTML = 'このページは鍵付きのリンクから開いてください。<br>添削アプリを直接開き、右上の「＋」のボタンから<br>ホーム画面用のリンクを出せます。';
+} else {
+  var f = document.getElementById('app');
+  f.onload = function () { document.getElementById('box').hidden = true; };
+  f.src = APP + '?k=' + k;
+  f.hidden = false;
+  if (!standalone) setTimeout(function () {
+    var p = document.getElementById('msg');
+    if (p) p.innerHTML = '共有ボタン →「ホーム画面に追加」で<br>アプリとして置けます';
+  }, 0);
+}
 </script>
 </body>
 </html>
