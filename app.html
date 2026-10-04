@@ -8,17 +8,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="おかも">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#2E3F50">
+<meta name="theme-color" content="#F3F6F9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10161D" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
 <link rel="apple-touch-icon" href="okm_app_icon_180.png">
 <link rel="icon" href="okm_app_icon_180.png">
 <style>
-:root{--bg:#F3F6F9;--surface:#FFFFFF;--ink:#2E3F50;--sub:#5E7285;--top:#2E3F50;--st:0px;--sb:env(safe-area-inset-bottom)}
-@media (prefers-color-scheme: dark){:root{--bg:#10161D;--surface:#18212B;--ink:#E6EDF3;--sub:#A3B4C4;--top:#10161D}}
+:root{--bg:#F3F6F9;--surface:#FFFFFF;--ink:#2E3F50;--sub:#5E7285;--st:0px;--sb:env(safe-area-inset-bottom)}
+@media (prefers-color-scheme: dark){:root{--bg:#10161D;--surface:#18212B;--ink:#E6EDF3;--sub:#A3B4C4}}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans",sans-serif;overflow:hidden}
-/* 上：ステータスバーの下に敷く帯（時計の白文字が読めるよう濃い色）。下：ホームバーの分はタブバーと同じ色 */
-#top{position:fixed;left:0;right:0;top:0;height:var(--st);background:var(--top)}
+/* 上：ステータスバーの分はアプリの背景と同じ色。下：ホームバーの分はタブバーと同じ色 */
+#top{position:fixed;left:0;right:0;top:0;height:var(--st);background:var(--bg)}
 #bot{position:fixed;left:0;right:0;bottom:0;height:var(--sb);background:var(--surface)}
 #app{position:fixed;left:0;right:0;top:var(--st);bottom:var(--sb);width:100%;height:calc(100% - var(--st) - var(--sb));border:0;display:block;background:var(--bg)}
 .box{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
@@ -45,14 +46,29 @@ var m = (location.hash + '&' + location.search).match(/[#?&]k=([0-9a-f]{32,128})
 var k = m ? m[1] : '';
 try { if (k) localStorage.setItem('okm_k', k); else k = localStorage.getItem('okm_k') || ''; } catch (e) {}
 // ステータスバーの高さ：ホーム画面アプリのときだけ上に帯を敷く（ノッチ無しの端末は 0 が返るので最低 20px）
-if (standalone) {
+function inset(side) {
   var probe = document.createElement('div');
-  probe.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top);width:1px;visibility:hidden';
+  probe.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-' + side + ');width:1px;visibility:hidden';
   document.body.appendChild(probe);
-  var st = Math.max(probe.offsetHeight, 20);
+  var h = probe.offsetHeight;
   document.body.removeChild(probe);
-  document.documentElement.style.setProperty('--st', st + 'px');
+  return h;
 }
+// ホーム画面アプリでは、iPhone が「画面の高さ」を上の余白の分だけ短く返すことがあり、下にすき間ができる。
+// そのため下端からではなく、上端から実際の画面の高さ（screen.height）で位置を決める
+function fit() {
+  if (!standalone) return;
+  var st = Math.max(inset('top'), 20), sb = inset('bottom');
+  var portrait = window.innerHeight >= window.innerWidth;
+  var H = portrait ? Math.max(window.innerHeight, screen.height || 0) : window.innerHeight;
+  var app = document.getElementById('app'), bot = document.getElementById('bot');
+  document.documentElement.style.setProperty('--st', st + 'px');
+  app.style.bottom = 'auto'; app.style.height = (H - st - sb) + 'px';
+  bot.style.bottom = 'auto'; bot.style.top = (H - sb) + 'px'; bot.style.height = sb + 'px';
+}
+fit();
+window.addEventListener('resize', fit);
+window.addEventListener('orientationchange', function () { setTimeout(fit, 300); });
 if (!k) {
   document.getElementById('msg').innerHTML = 'このページは鍵付きのリンクから開いてください。<br>添削アプリを直接開き、右上の「＋」のボタンから<br>ホーム画面用のリンクを出せます。';
 } else {
