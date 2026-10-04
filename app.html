@@ -15,13 +15,13 @@
 <link rel="apple-touch-icon" href="okm_app_icon_180.png">
 <link rel="icon" href="okm_app_icon_180.png">
 <style>
-:root{--bg:#F3F6F9;--surface:#FFFFFF;--ink:#2E3F50;--sub:#5E7285;--st:0px;--sb:env(safe-area-inset-bottom)}
-@media (prefers-color-scheme: dark){:root{--bg:#10161D;--surface:#18212B;--ink:#E6EDF3;--sub:#A3B4C4}}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans",sans-serif;overflow:hidden}
-/* 上：ステータスバーの分はアプリの背景と同じ色。下：ホームバーの分はタブバーと同じ色 */
-#top{position:fixed;left:0;right:0;top:0;height:var(--st);background:var(--bg)}
-#bot{position:fixed;left:0;right:0;bottom:0;height:var(--sb);background:var(--surface)}
-#app{position:fixed;left:0;right:0;top:var(--st);bottom:var(--sb);width:100%;height:calc(100% - var(--st) - var(--sb));border:0;display:block;background:var(--bg)}
+:root{--bg:#F3F6F9;--ink:#2E3F50;--sub:#5E7285;--st:0px;--ab:0px}
+@media (prefers-color-scheme: dark){:root{--bg:#10161D;--ink:#E6EDF3;--sub:#A3B4C4}}
+/* ホーム画面アプリで下にすき間ができる iPhone の挙動への対策：ページを上の余白の分だけ高くする */
+html{min-height:calc(100% + env(safe-area-inset-top));background:var(--bg)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans",sans-serif}
+/* 上下の余白はアプリの背景と同じ色。アプリは上の余白（--st）と下の余白（--ab）のあいだに置く */
+#app{position:fixed;left:0;right:0;top:var(--st);width:100%;height:calc(100% - var(--st) - var(--ab));border:0;display:block;background:var(--bg)}
 .box{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
 .box img{width:96px;height:96px;border-radius:22px}
 .box h1{font-size:18px;font-weight:500;margin:16px 0 8px}
@@ -30,9 +30,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 </style>
 </head>
 <body>
-<div id="top"></div>
 <iframe id="app" hidden title="おかも 添削" allow="clipboard-write"></iframe>
-<div id="bot"></div>
 <div class="box" id="box">
   <img src="okm_app_icon_180.png" alt="">
   <h1>おかも 添削</h1>
@@ -54,19 +52,20 @@ function inset(side) {
   document.body.removeChild(probe);
   return h;
 }
-// ホーム画面アプリでは、iPhone が「画面の高さ」を上の余白の分だけ短く返すことがあり、下にすき間ができる。
-// そのため下端からではなく、上端から実際の画面の高さ（screen.height）で位置を決める
+// 高さは「いま実際に描ける範囲」（window.innerHeight）に合わせる。描けない所へはみ出させない
 function fit() {
   if (!standalone) return;
   var st = Math.max(inset('top'), 20), sb = inset('bottom');
   var portrait = window.innerHeight >= window.innerWidth;
-  var H = portrait ? Math.max(window.innerHeight, screen.height || 0) : window.innerHeight;
-  var app = document.getElementById('app'), bot = document.getElementById('bot');
-  document.documentElement.style.setProperty('--st', st + 'px');
-  app.style.bottom = 'auto'; app.style.height = (H - st - sb) + 'px';
-  bot.style.bottom = 'auto'; bot.style.top = (H - sb) + 'px'; bot.style.height = sb + 'px';
+  // iPhone が画面より短い高さを返している（下に描けない帯がある）ときは、下の余白を足さない
+  var gap = portrait ? Math.max(0, (screen.height || 0) - window.innerHeight) : 0;
+  var ab = gap > 10 ? 0 : Math.max(sb - 14, 0);
+  var root = document.documentElement;
+  root.style.setProperty('--st', st + 'px');
+  root.style.setProperty('--ab', ab + 'px');
+  document.getElementById('app').style.height = (window.innerHeight - st - ab) + 'px';
 }
-fit();
+fit(); setTimeout(fit, 300); setTimeout(fit, 1200);
 window.addEventListener('resize', fit);
 window.addEventListener('orientationchange', function () { setTimeout(fit, 300); });
 if (!k) {
